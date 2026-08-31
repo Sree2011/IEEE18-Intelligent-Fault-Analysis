@@ -1,0 +1,69 @@
+/* Mermaid Diagram Styling */
+
+/* Highlight Blocks - A, O (Amber/Gold Yellow) */
+.highlightStyle {
+    fill: #f59e0b;
+    stroke: #d97706;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Foundation Blocks - B, C, D, E (Navy Blue) */
+.foundationStyle {
+    fill: #1e40af;
+    stroke: #0c2340;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Fault Type Blocks - F, G, H, I (Orange) */
+.faultStyle {
+    fill: #ff8c00;
+    stroke: #d97706;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Processing & Analysis Blocks - J, K, L, M, N (Olive Green) */
+.processingStyle {
+    fill: #6b8e23;
+    stroke: #556b2f;
+    color: #fff;
+    font-weight: bold;
+}
+
+/* Apply to specific nodes in Mermaid diagrams:
+   
+   Highlights (A, O) - Amber/Gold Yellow:
+   - A: 18-BUS POWER SYSTEM (Start)
+   - O: INTERACTIVE DASHBOARD (End)
+   
+   Foundation (B, C, D, E) - Navy Blue:
+   - B: Y-BUS MATRIX
+   - C: NEWTON-RAPHSON LOAD FLOW
+   - D: SEQUENCE NETWORKS
+   - E: FAULT SIMULATION
+   
+   Fault Types (F, G, H, I) - Orange:
+   - F: SLG (Single Line-to-Ground)
+   - G: LL (Line-to-Line)
+   - H: DLG (Double Line-to-Ground)
+   - I: 3-PHASE (Three-Phase Fault)
+   
+   Processing (J, K, L, M, N) - Olive Green:
+   - J: FEATURE EXTRACTION
+   - K: MACHINE LEARNING
+   - L: FAULT TYPE
+   - M: FAULT LOCATION
+   - N: SEVERITY
+
+   Usage in Mermaid:
+   classDef highlightStyle fill:#f59e0b,stroke:#d97706,color:#000,font-weight:bold
+   classDef foundationStyle fill:#1e40af,stroke:#0c2340,color:#fff,font-weight:bold
+   classDef faultStyle fill:#ff8c00,stroke:#d97706,color:#fff,font-weight:bold
+   classDef processingStyle fill:#6b8e23,stroke:#556b2f,color:#fff,font-weight:bold
+   class A,O highlightStyle
+   class B,C,D,E foundationStyle
+   class F,G,H,I faultStyle
+   class J,K,L,M,N processingStyle
+*/
