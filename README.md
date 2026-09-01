@@ -68,6 +68,7 @@ flowchart TD
     class B,C,D,E foundationStyle
     class F,G,H,I faultStyle
     class J,K,L,M,N processingStyle
+
 ```
 
 ---
@@ -521,49 +522,46 @@ The objective is not simply to obtain a high accuracy number, but to determine w
 
 ## 🗺️ Long-Term Roadmap
 
-```text
-                    CURRENT
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ 18-BUS MODEL    │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ LOAD FLOW       │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ FAULT ANALYSIS  │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ DATA GENERATION │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ MACHINE LEARNING│
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ FAULT LOCATION  │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ DASHBOARD       │
-              └────────┬────────┘
-                       │
-                       ▼
-              ┌─────────────────┐
-              │ INTELLIGENT     │
-              │ FAULT ANALYZER  │
-              └─────────────────┘
+```mermaid
+gantt
+    title IEEE18 Intelligent Fault Analysis — Project Roadmap
+    dateFormat YYYY-MM-DD
+    axisFormat %d %b
+
+    section ⚡ Foundation
+    System Data                    :data, 2026-09-01, 3d
+    Y-Bus Construction             :ybus, after data, 4d
+    Newton-Raphson Load Flow       :loadflow, after ybus, 6d
+
+    section 🔌 Fault Analysis
+    Sequence Networks              :seq, after loadflow, 6d
+    Single Line-to-Ground (SLG)    :slg, after seq, 3d
+    Line-to-Line (LL)              :ll, after slg, 3d
+    Double Line-to-Ground (DLG)    :dlg, after ll, 3d
+    Three-Phase Fault              :threephase, after dlg, 3d
+
+    section 📊 Dataset Generation
+    Fault Scenario Generation      :scenarios, after threephase, 6d
+    Feature Extraction             :features, after scenarios, 4d
+    Dataset Validation              :validation, after features, 3d
+
+    section 🤖 Machine Learning
+    Fault Type Classification      :classification, after validation, 6d
+    Fault Location Prediction      :location, after classification, 6d
+    Fault Severity Estimation      :severity, after location, 4d
+    Model Evaluation               :evaluation, after severity, 4d
+
+    section 📈 Visualization
+    Network Visualization          :network, after evaluation, 4d
+    Phasor Visualization           :phasor, after network, 4d
+    Fault Waveform Visualization   :waveforms, after phasor, 4d
+
+    section 🖥️ Dashboard
+    Streamlit Dashboard             :dashboard, after waveforms, 7d
+
+    section 🌐 Documentation
+    GitHub Pages                    :pages, after dashboard, 5d
+    Final Documentation             :docs, after pages, 5d
 ```
 
 ---
@@ -578,7 +576,7 @@ The project architecture is designed so that verified benchmark systems can be a
 
 ## 👤 Author
 
-**Sree**
+**Sree Sai Nandini Gundraju**
 
 Electrical Engineering / Power-System Analysis Project
 
