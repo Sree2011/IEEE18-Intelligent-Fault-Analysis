@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import numpy as np
 
+
 @dataclass
 class LoadFlowResult:
     voltage: np.ndarray
@@ -13,15 +14,18 @@ class LoadFlowResult:
     iterations: int
     max_mismatch: float
 
+
 def _calc_power(v, theta, ybus):
     """Calculate bus P/Q injections from V∠theta."""
     Vc = v * np.exp(1j * theta)
     S = Vc * np.conj(ybus @ Vc)
     return S.real, S.imag
 
+
 def _specified_power(bus_data):
     # bus_data columns: id,type,V,angle,Pd,Qd,Pg,Qg
     return bus_data[:, 6] - bus_data[:, 4], bus_data[:, 7] - bus_data[:, 5]
+
 
 def solve_load_flow(bus_data, ybus, tolerance=1e-8, max_iterations=50):
     """
@@ -29,10 +33,7 @@ def solve_load_flow(bus_data, ybus, tolerance=1e-8, max_iterations=50):
       1 = slack
       2 = PV
       3 = PQ
-
-    The actual busdata.m row layout is used explicitly.
     """
-    n = len(bus_data)
     bus_type = bus_data[:, 1].astype(int)
 
     slack = np.where(bus_type == 1)[0]
@@ -46,8 +47,6 @@ def solve_load_flow(bus_data, ybus, tolerance=1e-8, max_iterations=50):
 
     v = bus_data[:, 2].copy()
     theta = np.deg2rad(bus_data[:, 3].copy())
-
-    # PV buses keep their specified voltage magnitude.
     pv_v = v[pv].copy()
 
     angle_buses = np.r_[pv, pq]
@@ -58,38 +57,52 @@ def solve_load_flow(bus_data, ybus, tolerance=1e-8, max_iterations=50):
 
     for iteration in range(1, max_iterations + 1):
         p, q = _calc_power(v, theta, ybus)
-
         dp = p_spec - p
         dq = q_spec - q
-
         mismatch = np.r_[dp[angle_buses], dq[pq_buses]]
-        max_mismatch = float(np.max(np.abs(mismatch))) if mismatch.size else 0.0
 
+        max_mismatch = float(np.max(np.abs(mismatch))) if mismatch.size else 0.0
         if max_mismatch < tolerance:
             converged = True
             break
 
         J = _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses)
-
         try:
             dx = np.linalg.solve(J, mismatch)
         except np.linalg.LinAlgError as exc:
             raise RuntimeError("Newton-Raphson Jacobian is singular.") from exc
 
-        n_ang = len(angle_buses)
-        theta[angle_buses] += dx[:n_ang]
-        v[pq_buses] += dx[n_ang:]
+        step = 1.0
+        accepted = False
+        while step >= 1e-6:
+            v_try = v.copy()
+            theta_try = theta.copy()
 
-        # Re-impose PV/slack magnitudes.
-        v[pv] = pv_v
-        v[slack[0]] = bus_data[slack[0], 2]
-        theta[slack[0]] = np.deg2rad(bus_data[slack[0], 3])
+            theta_try[angle_buses] += step * dx[:len(angle_buses)]
+            v_try[pq_buses] += step * dx[len(angle_buses):]
+
+            v_try[pv] = pv_v
+            v_try[slack[0]] = bus_data[slack[0], 2]
+            theta_try[slack[0]] = np.deg2rad(bus_data[slack[0], 3])
+
+            p_try, q_try = _calc_power(v_try, theta_try, ybus)
+            dp_try = p_spec - p_try
+            dq_try = q_spec - q_try
+            mismatch_try = np.r_[dp_try[angle_buses], dq_try[pq_buses]]
+
+            if np.max(np.abs(mismatch_try)) < max_mismatch:
+                v, theta = v_try, theta_try
+                accepted = True
+                break
+            step *= 0.5
+
+        if not accepted:
+            raise RuntimeError("Newton step failed to reduce the power mismatch.")
 
         if np.any(v <= 0):
-            raise RuntimeError("Newton-Raphson produced a non-positive bus voltage.")
+            raise RuntimeError("Voltage magnitude went non-positive during iteration.")
 
     p, q = _calc_power(v, theta, ybus)
-
     return LoadFlowResult(
         voltage=v,
         angle_rad=theta,
@@ -100,6 +113,7 @@ def solve_load_flow(bus_data, ybus, tolerance=1e-8, max_iterations=50):
         max_mismatch=max_mismatch,
     )
 
+
 def _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses):
     """Analytical Newton-Raphson Jacobian for polar coordinates."""
     G = ybus.real
@@ -109,7 +123,6 @@ def _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses):
     n_q = len(pq_buses)
     J = np.zeros((n_a + n_q, n_a + n_q), dtype=float)
 
-    # H = dP/dtheta
     for a, i in enumerate(angle_buses):
         for b, k in enumerate(angle_buses):
             if i == k:
@@ -120,7 +133,6 @@ def _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses):
                     G[i, k] * np.sin(d) - B[i, k] * np.cos(d)
                 )
 
-    # N = dP/dV
     for a, i in enumerate(angle_buses):
         for b, k in enumerate(pq_buses):
             if i == k:
@@ -131,7 +143,6 @@ def _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses):
                     G[i, k] * np.cos(d) + B[i, k] * np.sin(d)
                 )
 
-    # M = dQ/dtheta
     for a, i in enumerate(pq_buses):
         for b, k in enumerate(angle_buses):
             if i == k:
@@ -142,7 +153,6 @@ def _build_jacobian(v, theta, ybus, p, q, angle_buses, pq_buses):
                     G[i, k] * np.cos(d) + B[i, k] * np.sin(d)
                 )
 
-    # L = dQ/dV
     for a, i in enumerate(pq_buses):
         for b, k in enumerate(pq_buses):
             if i == k:
